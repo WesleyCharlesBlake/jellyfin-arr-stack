@@ -1,99 +1,98 @@
+x-linuxserver-env: &linuxserver-env
+  PUID: ${PUID:-1000}
+  PGID: ${PGID:-1000}
+  TZ: ${TZ:-Africa/Johannesburg}
+
 services:
   jellyfin:
     image: jellyfin/jellyfin:latest
     container_name: jellyfin
     network_mode: host
+    environment:
+      TZ: ${TZ:-Africa/Johannesburg}
     volumes:
       - ./jellyfin/config:/config
       - ./jellyfin/cache:/cache
-      - /mnt/media:/media:ro
+      - "${MEDIA_ROOT:-/mnt/media}:/media:ro"
     devices:
-      - /dev/dri/renderD128:/dev/dri/renderD128
+      - /dev/dri:/dev/dri
     restart: unless-stopped
 
   jellyseerr:
     image: fallenbagel/jellyseerr:latest
     container_name: jellyseerr
     environment:
-      - LOG_LEVEL=info
-      - TZ=Europe/Paris
+      LOG_LEVEL: info
+      TZ: ${TZ:-Africa/Johannesburg}
+    extra_hosts:
+      - host.docker.internal:host-gateway
     volumes:
       - ./jellyseerr/config:/app/config
     ports:
-      - 5055:5055
+      - "5055:5055"
     restart: unless-stopped
 
   radarr:
     image: lscr.io/linuxserver/radarr:latest
     container_name: radarr
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/Paris
+      <<: *linuxserver-env
     volumes:
       - ./radarr/config:/config
-      - /mnt/media/movies:/movies
-      - /mnt/downloads:/downloads
+      - "${MEDIA_ROOT:-/mnt/media}/movies:/movies"
+      - "${DOWNLOADS_ROOT:-/mnt/downloads}:/downloads"
     ports:
-      - 7878:7878
+      - "7878:7878"
     restart: unless-stopped
 
   sonarr:
     image: lscr.io/linuxserver/sonarr:latest
     container_name: sonarr
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/Paris
+      <<: *linuxserver-env
     volumes:
       - ./sonarr/config:/config
-      - /mnt/media/tv:/tv
-      - /mnt/downloads:/downloads
+      - "${MEDIA_ROOT:-/mnt/media}/tv:/tv"
+      - "${DOWNLOADS_ROOT:-/mnt/downloads}:/downloads"
     ports:
-      - 8989:8989
+      - "8989:8989"
     restart: unless-stopped
 
   prowlarr:
     image: lscr.io/linuxserver/prowlarr:latest
     container_name: prowlarr
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/Paris
+      <<: *linuxserver-env
     volumes:
       - ./prowlarr/config:/config
     ports:
-      - 9696:9696
+      - "9696:9696"
     restart: unless-stopped
 
   qbittorrent:
     image: lscr.io/linuxserver/qbittorrent:latest
     container_name: qbittorrent
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/Paris
-      - WEBUI_PORT=8080
+      <<: *linuxserver-env
+      WEBUI_PORT: 8080
     volumes:
       - ./qbittorrent/config:/config
-      - /mnt/downloads:/downloads
+      - "${DOWNLOADS_ROOT:-/mnt/downloads}:/downloads"
     ports:
-      - 8080:8080
-      - 6881:6881
-      - 6881:6881/udp
+      - "8080:8080"
+      - "6881:6881"
+      - "6881:6881/udp"
     restart: unless-stopped
 
   bazarr:
     image: lscr.io/linuxserver/bazarr:latest
     container_name: bazarr
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/Paris
+      <<: *linuxserver-env
     volumes:
       - ./bazarr/config:/config
-      - /mnt/media/movies:/movies
-      - /mnt/media/tv:/tv
+      - "${MEDIA_ROOT:-/mnt/media}/movies:/movies"
+      - "${MEDIA_ROOT:-/mnt/media}/tv:/tv"
     ports:
-      - 6767:6767
+      - "6767:6767"
     restart: unless-stopped
