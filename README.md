@@ -2,6 +2,80 @@
 
 Complete Docker Compose media stack for Jellyfin with request management, media automation, indexer management, downloads, and subtitles.
 
+## What Each Service Does
+
+| Service | Role |
+| --- | --- |
+| **Jellyfin** | Your personal media server. Streams movies and TV shows to any device on your network. Think of it as your self-hosted Netflix. |
+| **Jellyseerr** | The request portal. This is where you (or other users) search for and request movies or shows. It hands off approved requests to Radarr or Sonarr automatically. |
+| **Radarr** | Handles movie automation. It receives a movie request, searches Prowlarr for a suitable torrent, sends it to qBittorrent, and moves the finished file into your media library. |
+| **Sonarr** | Same as Radarr but for TV shows. Monitors for new episodes and downloads them automatically as they air. |
+| **Prowlarr** | Manages your torrent indexers (search sites) in one place. Radarr and Sonarr query Prowlarr instead of connecting to indexers individually. |
+| **qBittorrent** | The download client. Receives torrent jobs from Radarr and Sonarr and does the actual downloading. |
+| **Bazarr** | Subtitle automation. Connects to Radarr and Sonarr, watches your library, and automatically downloads subtitles for your media. |
+| **FlareSolverr** | A helper service for Prowlarr. Solves Cloudflare bot challenges so Prowlarr can access indexers that are protected by Cloudflare. |
+
+## User Flow
+
+```
+You search in Jellyseerr
+        │
+        ▼
+Jellyseerr sends request to Radarr (movies) or Sonarr (TV)
+        │
+        ▼
+Radarr / Sonarr searches Prowlarr for a matching torrent
+        │
+        ▼
+Prowlarr queries your configured indexers (via FlareSolverr if needed)
+        │
+        ▼
+Radarr / Sonarr sends the best torrent to qBittorrent
+        │
+        ▼
+qBittorrent downloads the file
+        │
+        ▼
+Radarr / Sonarr moves the finished file to /movies or /tv
+        │
+        ▼
+Jellyfin picks it up and it appears in your library
+        │
+        ▼
+You watch it on any device running the Jellyfin app
+```
+
+## Watching on Your Devices
+
+Jellyfin has official apps for almost every platform:
+
+| Platform | Where to get it |
+| --- | --- |
+| **Android TV / Google TV** | Search "Jellyfin" on the Play Store |
+| **Android phone / tablet** | Search "Jellyfin" on the Play Store |
+| **iPhone / iPad** | Search "Jellyfin" on the App Store |
+| **Web browser** | `http://<server-ip>:8096` directly |
+| **Roku** | Jellyfin channel in the Roku Channel Store |
+| **Kodi** | JellyCon add-on |
+
+When the app asks for a server address, enter `http://<server-ip>:8096` using the local IP of the machine running this stack. Both devices need to be on the same network.
+
+To find your server's local IP:
+
+```bash
+hostname -I | awk '{print $1}'
+```
+
+## How to Request Content
+
+1. Open Jellyseerr at `http://<server-ip>:5055`
+2. Search for a movie or TV show
+3. Click **Request**
+4. For TV shows, select only the seasons you want — deselect the rest
+5. Submit — the request flows automatically through the stack
+
+Radarr and Sonarr handle everything from here. Check qBittorrent at `http://<server-ip>:8080` to watch downloads in progress. Once complete, the media appears in Jellyfin within a few minutes.
+
 ## Services
 
 | Service | URL | Purpose |
